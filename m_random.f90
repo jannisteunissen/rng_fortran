@@ -21,8 +21,8 @@ module m_random
    contains
      procedure, non_overridable :: set_seed    ! Seed the generator
      procedure, non_overridable :: jump        ! Jump function (see below)
-     procedure, non_overridable :: int4        ! 4-byte random integer
-     procedure, non_overridable :: int8        ! 8-byte random integer
+     procedure, non_overridable :: int_4       ! 4-byte random integer
+     procedure, non_overridable :: int_8       ! 8-byte random integer
      procedure, non_overridable :: unif_01     ! Uniform (0,1] real
      procedure, non_overridable :: two_normals ! Two normal(0,1) samples
      procedure, non_overridable :: poisson     ! Sample from Poisson-dist.
@@ -93,16 +93,16 @@ contains
   end subroutine jump
 
   !> Return 4-byte integer
-  integer(i4) function int4(self)
+  integer(i4) function int_4(self)
     class(rng_t), intent(inout) :: self
-    int4 = int(self%next(), i4)
-  end function int4
+    int_4 = int(self%next(), i4)
+  end function int_4
 
   !> Return 8-byte integer
-  integer(i8) function int8(self)
+  integer(i8) function int_8(self)
     class(rng_t), intent(inout) :: self
-    int8 = self%next()
-  end function int8
+    int_8 = self%next()
+  end function int_8
 
   !> Get a uniform [0,1) random real (double precision)
   real(dp) function unif_01(self)
