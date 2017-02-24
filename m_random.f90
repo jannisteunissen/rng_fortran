@@ -65,6 +65,9 @@ contains
     integer(i8), intent(in)     :: the_seed(2)
 
     self%s = the_seed
+
+    ! Simulate calls to next() to improve randomness of first number
+    call self%jump()
   end subroutine set_seed
 
   ! This is the jump function for the generator. It is equivalent
