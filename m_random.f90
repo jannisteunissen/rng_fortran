@@ -37,6 +37,7 @@ module m_random
      type(rng_t), allocatable :: rngs(:)
    contains
      procedure, non_overridable :: init_parallel
+     procedure, non_overridable :: update_seed
   end type prng_t
 
   public :: rng_t
@@ -59,6 +60,20 @@ contains
        call self%rngs(n)%jump()
     end do
   end subroutine init_parallel
+
+  !> Parallel RNG instances are often used temporarily. This routine can
+  !> afterwards be used to update the seed of the user's sequential RNG.
+  subroutine update_seed(self, rng)
+    class(prng_t), intent(inout) :: self
+    type(rng_t), intent(inout)   :: rng
+    integer                      :: n
+
+    do n = 1, size(self%rngs)
+      ! Perform exclusive-or with each parallel rng
+      rng%s(1) = ieor(rng%s(1), self%rngs(n)%s(1))
+      rng%s(2) = ieor(rng%s(2), self%rngs(n)%s(2))
+    end do
+  end subroutine update_seed
 
   !> Set a seed for the rng
   subroutine set_seed(self, the_seed)

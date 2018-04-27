@@ -31,6 +31,9 @@ program test_parallel
   !$omp end do
   !$omp end parallel
 
+  ! Update the rng seed afterwards, using the 'evolved' prng state
+  call prng%update_seed(rng)
+
   call system_clock(time_end)
 
   mean     = sum(rand_results) / n_samples
