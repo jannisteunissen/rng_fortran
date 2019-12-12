@@ -21,6 +21,7 @@ module m_random
      integer(i8), private       :: separator(32) ! Separate cache lines (parallel use)
    contains
      procedure, non_overridable :: set_seed    ! Seed the generator
+     procedure, non_overridable :: set_random_seed ! Use a random seed
      procedure, non_overridable :: jump        ! Jump function (see below)
      procedure, non_overridable :: int_4       ! 4-byte random integer
      procedure, non_overridable :: int_8       ! 8-byte random integer
@@ -87,6 +88,27 @@ contains
     ! Simulate calls to next() to improve randomness of first number
     call self%jump()
   end subroutine set_seed
+
+  subroutine set_random_seed(self)
+    class(rng_t), intent(inout) :: self
+    integer                     :: i
+    real(dp)                    :: rr
+    integer(i8)                 :: time
+
+    ! Get a random seed from the system (this does not always work)
+    call random_seed()
+
+    ! Get some count of the time
+    call system_clock(time)
+
+    do i = 1, 2
+       call random_number(rr)
+       self%s(i) = ieor(transfer(rr, 1_i8), transfer(time, 1_i8))
+    end do
+
+    ! Simulate calls to next() to improve randomness of first number
+    call self%jump()
+  end subroutine set_random_seed
 
   ! This is the jump function for the generator. It is equivalent
   ! to 2^64 calls to next(); it can be used to generate 2^64
