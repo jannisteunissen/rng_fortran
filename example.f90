@@ -1,9 +1,6 @@
 program example
   use m_random
 
-  ! Define 8-byte integer type
-  integer, parameter :: i8 = selected_int_kind(18)
-
   ! Define double precision real type
   integer, parameter :: dp = kind(0.0d0)
 
@@ -11,7 +8,7 @@ program example
   type(RNG_t) :: rng
 
   ! Set the initial seed for the generator
-  call rng%set_seed([89732_i8, 1892342989_i8])
+  call rng%set_random_seed()
 
   ! Print some random numbers
   print *, "Uniform random number: ", rng%unif_01()
