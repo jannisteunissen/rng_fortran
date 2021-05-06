@@ -160,20 +160,13 @@ contains
     unif_01 = transfer(x, tmp) - 1.0_dp
   end function unif_01
 
-  !> Return normal random variate with mean 0 and variance 1.
+  !> Return normal random variate with mean 0 and variance 1. This function is
+  !> half as efficient as two_normals
   real(dp) function normal(self)
     class(rng_t), intent(inout) :: self
-    real(dp), save              :: two_normals(2)
-    logical, save               :: have_stored_value = .false.
-
-    if (have_stored_value) then
-       normal = two_normals(2)
-       have_stored_value = .false.
-    else
-       two_normals = self%two_normals()
-       normal = two_normals(1)
-       have_stored_value = .true.
-    end if
+    real(dp)                    :: two_normals(2)
+    two_normals = self%two_normals()
+    normal      = two_normals(1)
   end function normal
 
   !> Return two normal random variates with mean 0 and variance 1.

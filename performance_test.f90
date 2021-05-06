@@ -50,8 +50,8 @@ program test_m_random
    print *, "std dev/<std dev>", sqrt(variance)*sqrt(12.0_dp)
 
    call cpu_time(time_start)
-   do nn = 1, n_samples
-      rand_results(nn) = rng%normal()
+   do nn = 1, n_samples, 2
+      rand_results(nn:nn+1) = rng%two_normals()
    end do
    call cpu_time(time_end)
    rand_results = rand_results + 1
@@ -81,7 +81,6 @@ program test_m_random
    call cpu_time(time_start)
    do nn = 1, n_samples
       rand_results(nn) = rng%exponential(1.0_dp)
-      print *, rand_results(nn)
    end do
    call cpu_time(time_end)
    mean = sum(rand_results) / n_samples
