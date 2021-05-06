@@ -29,6 +29,7 @@ module m_random
      procedure, non_overridable :: normal      ! One normal(0,1) sample
      procedure, non_overridable :: two_normals ! Two normal(0,1) samples
      procedure, non_overridable :: poisson     ! Sample from Poisson-dist.
+     procedure, non_overridable :: exponential ! Sample from exponential dist.
      procedure, non_overridable :: circle      ! Sample on a circle
      procedure, non_overridable :: sphere      ! Sample on a sphere
      procedure, non_overridable :: next        ! Internal method
@@ -160,18 +161,17 @@ contains
   end function unif_01
 
   !> Return normal random variate with mean 0 and variance 1.
-  function normal(self) result(r)
+  real(dp) function normal(self)
     class(rng_t), intent(inout) :: self
-    real(dp)                    :: r
     real(dp), save              :: two_normals(2)
     logical, save               :: have_stored_value = .false.
 
     if (have_stored_value) then
-       r = two_normals(2)
+       normal = two_normals(2)
        have_stored_value = .false.
     else
        two_normals = self%two_normals()
-       r = two_normals(1)
+       normal = two_normals(1)
        have_stored_value = .true.
     end if
   end function normal
@@ -190,6 +190,15 @@ contains
     end do
     rands = rands * sqrt(-2 * log(sum_sq) / sum_sq)
   end function two_normals
+
+  !> Return exponential random variate with rate lambda
+  real(dp) function exponential(self, lambda)
+    class(rng_t), intent(inout) :: self
+    real(dp), intent(in)        :: lambda
+
+    ! Assumes 1 - unif_01 is in (0, 1], so we avoid log(0.)
+    exponential = -log(1 - self%unif_01())/lambda
+  end function exponential
 
   !> Return Poisson random variate with rate lambda. Works well for lambda < 30
   !> or so. For lambda >> 1 it can produce wrong results due to roundoff error.
