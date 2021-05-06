@@ -25,6 +25,7 @@ module m_random
      procedure, non_overridable :: int_4       ! 4-byte random integer
      procedure, non_overridable :: int_8       ! 8-byte random integer
      procedure, non_overridable :: unif_01     ! Uniform (0,1] real
+     procedure, non_overridable :: normal      ! One normal(0,1) sample
      procedure, non_overridable :: two_normals ! Two normal(0,1) samples
      procedure, non_overridable :: poisson     ! Sample from Poisson-dist.
      procedure, non_overridable :: circle      ! Sample on a circle
@@ -135,6 +136,23 @@ contains
     x   = ior(shiftl(1023_i8, 52), shiftr(x, 12))
     unif_01 = transfer(x, tmp) - 1.0_dp
   end function unif_01
+
+  !> Return normal random variate with mean 0 and variance 1.
+  function normal(self) result(r)
+    class(rng_t), intent(inout) :: self
+    real(dp)                    :: r
+    real(dp), save              :: two_normals(2)
+    logical, save               :: have_stored_value = .false.
+
+    if (have_stored_value) then
+       r = two_normals(2)
+       have_stored_value = .false.
+    else
+       two_normals = self%two_normals()
+       r = two_normals(1)
+       have_stored_value = .true.
+    end if
+  end function normal
 
   !> Return two normal random variates with mean 0 and variance 1.
   !> http://en.wikipedia.org/wiki/Marsaglia_polar_method
