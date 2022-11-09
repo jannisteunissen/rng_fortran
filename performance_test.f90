@@ -7,7 +7,7 @@ program test_m_random
    integer, parameter    :: n_samples = 10*1000*1000
    integer               :: nn, rng_seed
    real(dp)              :: mean, variance
-   real(dp), parameter   :: pi        = acos(-1.0_dp)
+   real(dp), parameter   :: poisson_lambda = 15.0_dp
    real(dp)              :: time_start, time_end
    real(dp), allocatable :: rand_results(:)
    type(RNG_t)           :: rng
@@ -66,7 +66,7 @@ program test_m_random
 
    call cpu_time(time_start)
    do nn = 1, n_samples
-      rand_results(nn) = rng%poisson(pi)
+      rand_results(nn) = rng%poisson(poisson_lambda)
    end do
    call cpu_time(time_end)
    mean = sum(rand_results) / n_samples
@@ -75,8 +75,8 @@ program test_m_random
    print *, ""
    print *, "For Poisson random numbers, the result is:"
    print *, "nanoseconds per number (upper bound)", 1.0e9_dp * (time_end - time_start) / n_samples
-   print *, "mean/<mean>", mean/pi ! Above we add one to RNG_normal()
-   print *, "std dev/<std dev>", sqrt(variance/pi)
+   print *, "mean/<mean>", mean/poisson_lambda ! Above we add one to RNG_normal()
+   print *, "std dev/<std dev>", sqrt(variance/poisson_lambda)
 
    call cpu_time(time_start)
    do nn = 1, n_samples

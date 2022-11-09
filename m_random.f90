@@ -29,6 +29,7 @@ module m_random
      procedure, non_overridable :: normal      ! One normal(0,1) sample
      procedure, non_overridable :: two_normals ! Two normal(0,1) samples
      procedure, non_overridable :: poisson     ! Sample from Poisson-dist.
+     procedure, non_overridable :: poisson_knuth ! Sample from Poisson-dist.
      procedure, non_overridable :: exponential ! Sample from exponential dist.
      procedure, non_overridable :: circle      ! Sample on a circle
      procedure, non_overridable :: sphere      ! Sample on a sphere
@@ -195,7 +196,7 @@ contains
 
   !> Return Poisson random variate with rate lambda. Works well for lambda < 30
   !> or so. For lambda >> 1 it can produce wrong results due to roundoff error.
-  function poisson(self, lambda) result(rr)
+  function poisson_knuth(self, lambda) result(rr)
     class(rng_t), intent(inout) :: self
     real(dp), intent(in)        :: lambda
     integer(i4)                 :: rr
@@ -209,6 +210,25 @@ contains
        rr = rr + 1
        p = p * self%unif_01()
     end do
+  end function poisson_knuth
+
+  !> Return Poisson random variate with rate lambda. Works well for lambda < 30
+  !> or so. For lambda >> 1 it can produce wrong results due to roundoff error.
+  function poisson(self, lambda) result(rr)
+    class(rng_t), intent(inout) :: self
+    real(dp), intent(in)        :: lambda
+    integer(i4)                 :: rr
+    real(dp)                    :: two_normals(2)
+
+    if (lambda < 10) then
+       ! Use algorithm for small value of lambda
+       rr = self%poisson_knuth(lambda)
+    else
+       ! Approximate through normal distribution (note that one normal number is
+       ! wasted here)
+       two_normals = self%two_normals()
+       rr = max(0, nint(lambda + sqrt(lambda) * two_normals(1)))
+    end if
   end function poisson
 
   !> Sample point on a circle with given radius
