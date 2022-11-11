@@ -60,6 +60,7 @@ contains
 
     allocate(self%rngs(n_proc))
     self%rngs(1) = rng
+    call self%rngs(1)%jump()
 
     do n = 2, n_proc
        self%rngs(n) = self%rngs(n-1)
