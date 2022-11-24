@@ -19,6 +19,9 @@ module m_random
      !> The rng state (always use your own seed)
      integer(i8), private       :: s(2) = [123456789_i8, 987654321_i8]
      integer(i8), private       :: separator(32) ! Separate cache lines (parallel use)
+     real(dp), private          :: stored_normal
+     logical, private           :: have_stored_normal = .false.
+     logical, private           :: initialized = .false.
    contains
      procedure, non_overridable :: set_seed    ! Seed the generator
      procedure, non_overridable :: set_random_seed ! Use a random seed
@@ -162,13 +165,20 @@ contains
     unif_01 = transfer(x, tmp) - 1.0_dp
   end function unif_01
 
-  !> Return normal random variate with mean 0 and variance 1. This function is
-  !> half as efficient as two_normals
+  !> Return normal random variate with mean 0 and variance 1
   real(dp) function normal(self)
     class(rng_t), intent(inout) :: self
     real(dp)                    :: two_normals(2)
-    two_normals = self%two_normals()
-    normal      = two_normals(1)
+
+    if (self%have_stored_normal) then
+       normal = self%stored_normal
+       self%have_stored_normal = .false.
+    else
+       two_normals = self%two_normals()
+       normal      = two_normals(1)
+       self%stored_normal = two_normals(2)
+       self%have_stored_normal = .true.
+    end if
   end function normal
 
   !> Return two normal random variates with mean 0 and variance 1.

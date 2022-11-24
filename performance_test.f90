@@ -50,8 +50,8 @@ program test_m_random
    print *, "std dev/<std dev>", sqrt(variance)*sqrt(12.0_dp)
 
    call cpu_time(time_start)
-   do nn = 1, n_samples, 2
-      rand_results(nn:nn+1) = rng%two_normals()
+   do nn = 1, n_samples
+      rand_results(nn) = rng%normal()
    end do
    call cpu_time(time_end)
    rand_results = rand_results + 1
