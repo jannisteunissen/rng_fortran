@@ -125,13 +125,15 @@ contains
   !> Return 4-byte integer
   integer(int32) function int_32(self)
     class(rng_t), intent(inout) :: self
-    int_32 = int(self%next(), int32)
+    integer(int64)              :: tmp
+    call self%next(tmp)
+    int_32 = int(tmp, int32)
   end function int_32
 
   !> Return 8-byte integer
   integer(int64) function int_64(self)
     class(rng_t), intent(inout) :: self
-    int_64 = self%next()
+    call self%next(int_64)
   end function int_64
 
   !> Get a uniform [0,1) random real (double precision)
@@ -140,8 +142,8 @@ contains
     integer(int64)              :: x
     real(dp)                    :: tmp
 
-    x   = self%next()
-    x   = ior(shiftl(1023_int64, 52), shiftr(x, 12))
+    call self%next(x)
+    x = ior(shiftl(1023_int64, 52), shiftr(x, 12))
     unif_01 = transfer(x, tmp) - 1.0_dp
   end function unif_01
 
@@ -343,9 +345,9 @@ contains
   !> Interal routine: get the next value (returned as 64 bit signed integer)
   !> 2026 update: Now uses (a=24, b=16, b=37), see
   !> https://prng.di.unimi.it/xoroshiro128plus.c
-  function next(self) result(res)
+  pure subroutine next(self, res)
     class(rng_t), intent(inout) :: self
-    integer(int64)              :: res
+    integer(int64), intent(out) :: res
     integer(int64)              :: t(2)
 
     t         = self%s
@@ -353,7 +355,7 @@ contains
     t(2)      = ieor(t(1), t(2))
     self%s(1) = ieor(ieor(rotl(t(1), 24), t(2)), shiftl(t(2), 16))
     self%s(2) = rotl(t(2), 37)
-  end function next
+  end subroutine next
 
   !> Helper function for next()
   pure function rotl(x, k) result(res)
@@ -383,7 +385,7 @@ contains
           if (iand(jmp_c(i), shiftl(1_int64, b)) /= 0) then
              t = ieor(t, self%s)
           end if
-          dummy = self%next()
+          call self%next(dummy)
        end do
     end do
 
