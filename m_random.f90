@@ -85,14 +85,20 @@ contains
   end subroutine update_seed
 
   !> Set a seed for the rng
-  subroutine set_seed(self, the_seed)
-    class(rng_t), intent(inout) :: self
-    integer(int64), intent(in)  :: the_seed(2)
+  subroutine set_seed(self, the_seed, do_jump)
+    class(rng_t), intent(inout)   :: self
+    integer(int64), intent(in)    :: the_seed(2)
+    logical, intent(in), optional :: do_jump ! Default is true
+    logical :: perform_jump
 
     self%s = the_seed
 
-    ! Simulate calls to next() to improve randomness of first number
-    call self%jump()
+    perform_jump = .true.; if (present(do_jump)) perform_jump = do_jump
+
+    if (perform_jump) then
+       ! Simulate calls to next() to improve randomness of first number
+       call self%jump()
+    end if
   end subroutine set_seed
 
   subroutine set_random_seed(self)
@@ -115,31 +121,6 @@ contains
     ! Simulate calls to next() to improve randomness of first number
     call self%jump()
   end subroutine set_random_seed
-
-  ! This is the jump function for the generator. It is equivalent
-  ! to 2^64 calls to next(); it can be used to generate 2^64
-  ! non-overlapping subsequences for parallel computations.
-  subroutine jump(self)
-    class(rng_t), intent(inout) :: self
-    integer                     :: i, b
-    integer(int64)              :: t(2), dummy
-
-    ! The signed equivalent of the unsigned constants
-    integer(int64), parameter :: jmp_c(2) = &
-         (/-4707382666127344949_int64, -2852180941702784734_int64/)
-
-    t = 0
-    do i = 1, 2
-       do b = 0, 63
-          if (iand(jmp_c(i), shiftl(1_int64, b)) /= 0) then
-             t = ieor(t, self%s)
-          end if
-          dummy = self%next()
-       end do
-    end do
-
-    self%s = t
-  end subroutine jump
 
   !> Return 4-byte integer
   integer(int32) function int_32(self)
@@ -360,6 +341,8 @@ contains
   end function sphere
 
   !> Interal routine: get the next value (returned as 64 bit signed integer)
+  !> 2026 update: Now uses (a=24, b=16, b=37), see
+  !> https://prng.di.unimi.it/xoroshiro128plus.c
   function next(self) result(res)
     class(rng_t), intent(inout) :: self
     integer(int64)              :: res
@@ -368,8 +351,8 @@ contains
     t         = self%s
     res       = t(1) + t(2)
     t(2)      = ieor(t(1), t(2))
-    self%s(1) = ieor(ieor(rotl(t(1), 55), t(2)), shiftl(t(2), 14))
-    self%s(2) = rotl(t(2), 36)
+    self%s(1) = ieor(ieor(rotl(t(1), 24), t(2)), shiftl(t(2), 16))
+    self%s(2) = rotl(t(2), 37)
   end function next
 
   !> Helper function for next()
@@ -380,5 +363,31 @@ contains
 
     res = ior(shiftl(x, k), shiftr(x, 64 - k))
   end function rotl
+
+  ! This is the jump function for the generator. It is equivalent
+  ! to 2^64 calls to next(); it can be used to generate 2^64
+  ! non-overlapping subsequences for parallel computations.
+  ! 2026 update: new constant for new coefficients
+  subroutine jump(self)
+    class(rng_t), intent(inout) :: self
+    integer                     :: i, b
+    integer(int64)              :: t(2), dummy
+
+    ! The signed equivalent of the unsigned constants
+    integer(int64), parameter :: jmp_c(2) = &
+         [-2337365368286915419_int64, 1659688472399708668_int64]
+
+    t = 0
+    do i = 1, 2
+       do b = 0, 63
+          if (iand(jmp_c(i), shiftl(1_int64, b)) /= 0) then
+             t = ieor(t, self%s)
+          end if
+          dummy = self%next()
+       end do
+    end do
+
+    self%s = t
+  end subroutine jump
 
 end module m_random

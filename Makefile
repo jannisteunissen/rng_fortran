@@ -1,7 +1,7 @@
 FC := gfortran
-FFLAGS := -O3 -flto -g -std=f2008 -Wall -Wextra -fopenmp
+FFLAGS := -O3 -flto -g -std=f2008 -Wall -Wextra -fopenmp -march=native
 OBJS := m_random.o
-TESTS := example performance_test parallel_test
+TESTS := example performance_test parallel_test correctness_test
 
 .PHONY:	all clean
 
