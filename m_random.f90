@@ -143,7 +143,7 @@ contains
     real(dp)                    :: tmp
 
     call self%next(x)
-    x = ior(shiftl(1023_int64, 52), shiftr(x, 12))
+    x = ior(ishft(1023_int64, 52), ishft(x, -12))
     unif_01 = transfer(x, tmp) - 1.0_dp
   end function unif_01
 
@@ -353,18 +353,9 @@ contains
     t         = self%s
     res       = t(1) + t(2)
     t(2)      = ieor(t(1), t(2))
-    self%s(1) = ieor(ieor(rotl(t(1), 24), t(2)), shiftl(t(2), 16))
-    self%s(2) = rotl(t(2), 37)
+    self%s(1) = ieor(ieor(ishftc(t(1), 24), t(2)), ishft(t(2), 16))
+    self%s(2) = ishftc(t(2), 37)
   end subroutine next
-
-  !> Helper function for next()
-  pure function rotl(x, k) result(res)
-    integer(int64), intent(in) :: x
-    integer, intent(in)        :: k
-    integer(int64)             :: res
-
-    res = ior(shiftl(x, k), shiftr(x, 64 - k))
-  end function rotl
 
   ! This is the jump function for the generator. It is equivalent
   ! to 2^64 calls to next(); it can be used to generate 2^64
@@ -382,7 +373,7 @@ contains
     t = 0
     do i = 1, 2
        do b = 0, 63
-          if (iand(jmp_c(i), shiftl(1_int64, b)) /= 0) then
+          if (iand(jmp_c(i), ishft(1_int64, b)) /= 0) then
              t = ieor(t, self%s)
           end if
           call self%next(dummy)
